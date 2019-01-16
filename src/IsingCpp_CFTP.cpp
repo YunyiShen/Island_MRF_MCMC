@@ -266,33 +266,49 @@ IntegerMatrix IsingMet(NumericMatrix graphs, NumericVector thresholds, NumericMa
 
 
 ///ISING PROCESS SAMPLER:
-// [[Rcpp::export]]
-IntegerMatrix IsingProcess(int nSample, NumericMatrix graph, NumericVector thresholds, double beta, IntegerVector responses)
+// [[Rcpp::export]] changed, List class not sure
+List IsingProcess(int nSample, NumericMatrix graphs, NumericVector thresholds, NumericMatrix grapht, NumericVector thresholdt, eta,double beta, IntegerVector responses)
 {
   // Parameters and results vector:
-  int N = graph.nrow();
-  IntegerVector state =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
+  int N = graphs.nrow();
+  IntegerVector states =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
+  IntegerVector statet =  ifelse(runif(N) < 0.5, responses[1], responses[0]);
   double u;
   double P;
-  IntegerMatrix Res(nSample,N);
+  IntegerMatrix Ress(nSample,N);
+  IntegerMatrix Rest(nSample,N);
   int node;
     
     // START ALGORITHM
     for (int it=0;it<nSample;it++)
     {
-      node = floor(R::runif(0,N));
+		node = floor(R::runif(0,N));
         u = runif(1)[0];
-        P = Pplus(node, graph, state, thresholds, beta, responses);
+        P = P = Pplus(node, graphs, states, statet, eta,thresholds, beta, responses);
         if (u < P)
         {
-          state[node] = responses[1];
+          states[node] = responses[1];
         } else 
         {
-          state[node] = responses[0];
+          states[node] = responses[0];
         }
-        for (int k=0; k<N; k++) Res(it,k) = state[k];
+        Ress(it,_) = states;
+		
+		node = floor(R::runif(0,N));
+        u = runif(1)[0];
+        P = P = Pplus(node, grapht, statet, states, eta,thresholds, beta, responses);
+        if (u < P)
+        {
+          statet[node] = responses[1];
+        } else 
+        {
+          statet[node] = responses[0];
+        }
+        Rest(it,_) = statet;
     }
-   
+  List Res(2);
+  Res[0] = states;
+  Res[1] = statet;
   return(Res);
 }
 
