@@ -82,8 +82,7 @@ NumericVector PplusMinMax(int i, NumericMatrix J, IntegerVector s, IntegerVector
 }
        
 // Inner function: changed
-IntegerMatrix IsingEx(NumericMatrix graphs, NumericMatrix grapht, NumericVector thresholds, NumericVector thresholdt, double eta ,double beta, int nIter, IntegerVector responses, bool exact,
-IntegerVector constrain)
+IntegerMatrix IsingEx(NumericMatrix graphs, NumericMatrix grapht, NumericVector thresholds, NumericVector thresholdt, double eta ,double beta, int nIter, IntegerVector responses, bool exact)
 {
   // Parameters and results vector:
   int N = graph.nrow();
@@ -313,32 +312,42 @@ List IsingProcess(int nSample, NumericMatrix graphs, NumericVector thresholds, N
 }
 
 // OVERAL FUNCTION //
-// [[Rcpp::export]]
-IntegerMatrix IsingSamplerCpp(int n, NumericMatrix graph, NumericVector thresholds, double beta, int nIter, IntegerVector responses, bool exact,
-IntegerMatrix constrain)
+// [[Rcpp::export]]// Changed, but not sure about list
+List IsingSamplerCpp(int n, NumericMatrix graphs, NumericVector thresholds, NumericMatrix grapht, NumericVector thresholdt, double eta, double beta, int nIter, IntegerVector responses, bool exact,
+IntegerMatrix constrains, IntegerMatrix constraint)
 {
-  int Ni = graph.nrow();
-  IntegerMatrix Res(n,Ni);
-  IntegerVector state(Ni);
-  IntegerVector constrainVec(Ni);
+  int Ni = graphs.nrow();
+  IntegerMatrix Ress(n,Ni);
+  IntegerMatrix Rest(n,Ni);
+  //IntegerVector states(Ni);
+  //IntegerVector statet(Ni);
+  IntegerMatrix state(Ni,2);
+  IntegerVector constrainsVec(Ni);
+  IntegerVector constraintVec(Ni);
+  List Res(2);
   if (exact)
   {
     for (int s=0;s<n;s++)
     {
-      for (int i=0;i<Ni;i++) constrainVec[i] = constrain(s,i);
-      state = IsingEx(graph, thresholds, beta, nIter, responses, exact, constrainVec);
-      for (int i=0;i<Ni;i++) Res(s,i) = state[i];
+      constrainsVec = constrains(s,_);
+	  constraintVec = constraint(s,_);
+      state = IsingEx(graphs, thresholds, grapht, thresholdt, eta, beta, nIter, responses, exact);
+	  Rest(s,_) = state(_,0);
+      Ress(s,_) = state(_,0);
     }
   } else 
   {
     for (int s=0;s<n;s++)
     {
-      for (int i=0;i<Ni;i++) constrainVec[i] = constrain(s,i);
-      state = IsingMet(graph, thresholds, beta, nIter, responses, constrainVec);
-      for (int i=0;i<Ni;i++) Res(s,i) = state[i];
+      constrainsVec = constrains(s,_);
+	  constraintVec = constraint(s,_);
+      state = IsingMet(graphs, thresholds, grapht, thresholdt, eta, beta, nIter, responses, exact);
+	  Rest(s,_) = state(_,0);
+      Ress(s,_) = state(_,0);
     }
   }
-  
+  Res(0) = Ress;
+  Res(1) = Rest; //not sure here
   return(Res);
 }
 
@@ -363,7 +372,7 @@ double H(NumericMatrix J, IntegerVector s, IntegerVector t, double eta ,NumericV
 
 
 // Likelihood without Z
-// [[Rcpp::export]]
+// [[Rcpp::export]] // not sure what this is
 double f(IntegerMatrix Y, NumericMatrix J, NumericVector h)
 {
   double Res = 1;
