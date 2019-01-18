@@ -355,16 +355,18 @@ IntegerMatrix constrains, IntegerMatrix constraint)
 // HELPER FUNCTIONS //
 // Hamiltonian: changed
 // [[Rcpp::export]]
-double H(NumericMatrix J, IntegerVector s, IntegerVector t, double eta ,NumericVector h)
+double H(NumericMatrix Js, NumericMatrix Jt, IntegerVector s, IntegerVector t, double eta, NumericVector hs, NumericVector ht)
 {
   double Res = 0;
   int N = J.nrow();
   for (int i=0;i<N;i++)
   {
-    Res -= (h[i] + eta * t[i]) * s[i];
+    Res -= (hs[i] + eta * t[i]) * s[i];
+	Res -= (ht[i]) * t[i];
     for (int j=i;j<N;j++)
     {
-      if (j!=i) Res -= J(i,j) * s[i] * s[j];
+      Res -= Js(i,j) * s[i] * s[j] * (j!=i);
+	  Res -= Jt(i,j) * t[i] * t[j] * (j!=i);
     }
   }
   return(Res);
@@ -373,25 +375,27 @@ double H(NumericMatrix J, IntegerVector s, IntegerVector t, double eta ,NumericV
 
 // Likelihood without Z
 // [[Rcpp::export]] // not sure what this is
-double f(IntegerMatrix Y, NumericMatrix J, NumericVector h)
+double f(List Y, NumericMatrix Js, NumericMatrix Jt, NumericVector hs, NumericVector ht , double eta)
 {
   double Res = 1;
-  int Np = Y.nrow();
-  int Ni = J.ncol();
+  S = Y(0);
+  T = Y(1);
+  int Np = S.nrow();
+  int Ni = Js.ncol();
   IntegerVector s(Ni);
+  IntegerVector t(Ni);
   for (int p=0;p<Np;p++)
   {
-    for (int i=0;i<Ni;i++)
-    {
-      s[i] = Y(p,i);
-    }
-    Res *= exp(-1.0 * H(J, s, h));
+
+      s = S(p,_);
+	  t = T(p,_)
+    Res *= exp(-1.0 * H(Js, Jt, s, t, eta, hs, ht));
   }
   return(Res);
 }
 
 
-// VECTOR VERSIONS //
+// VECTOR VERSIONS did not changed, skip//
 
 
 // Hamiltonian:
@@ -651,6 +655,26 @@ NumericVector expvalues(IntegerMatrix x){
   }
   
   return(Res);
+}
+
+//expected interlayer spin correlation 
+double EIntLayercov(List MCMC){
+	S = MCMC(0);
+	T = MCMC(1);
+	// Sample size:
+    int N = S.nrow();
+    // Number of nodes:
+    int P = T.ncol();
+	double Res;
+	Res = 0;
+	for(int i=0;i<N;i++){
+		for(int j=0;j<P;j++){
+			Res += S(i,j) * T(i,j);
+			
+		}
+	}
+	Res = Res/(N*P);
+	return(Res);
 }
 
 // Function to obtain thresholds from vector:
