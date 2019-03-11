@@ -362,7 +362,7 @@ double H(NumericMatrix Js, NumericMatrix Jt, IntegerVector s, IntegerVector t, d
   for (int i=0;i<N;i++)
   {
     Res -= (hs[i] + eta * t[i]) * s[i];
-	Res -= (ht[i]) * t[i];
+	Res -= (ht[i] + eta * s[i]) * t[i];
     for (int j=i;j<N;j++)
     {
       Res -= Js(i,j) * s[i] * s[j] * (j!=i);
