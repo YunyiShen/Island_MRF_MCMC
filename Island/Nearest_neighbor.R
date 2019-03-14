@@ -41,10 +41,11 @@ for(i in 1:155){
   island_on = onlyisland$Location[i]
   neighbor_ex_island = neighbors[onlyisland$Location[neighbors]!=island_on]
   if(length(neighbor_ex_island)==0){next}
-  if(sum(link_inner[i])==4){next}
+  if(sum(link_inner[i])>=4){next}
   distances = distMfull[i,neighbor_ex_island]
   
-  nearst = neighbor_ex_island[which(distances==min(distances))]
+  #nearst = neighbor_ex_island[which(distances==min(distances))]
+  nearst = neighbor_ex_island
   
   link_outer[i,nearst]=1
   link_outer[nearst,i]=1
@@ -53,6 +54,7 @@ for(i in 1:155){
     neighbor_in_island = neighbors[onlyisland$Location[neighbors]==island_on]
     distances = distMfull[i,neighbor_in_island]
     nearst = neighbor_in_island[which(distances==min(distances))]
+    #nearst = neighbor_ex_island
     link_inner[i,nearst]=1
     link_inner[nearst,i]=1
   }
@@ -76,7 +78,7 @@ lineWKT = apply(all_edges,1, function(X1){ paste0("LINESTRING(",paste(X1[c("X","
 
 all_edges = data.frame(all_edges,lineWKT)
 
-write.csv(all_edges,"all_link_draft.csv",row.names = F)
+write.csv(all_edges,"all_link_trangular.csv",row.names = F)
 #https://gis.stackexchange.com/questions/225102/calculate-distance-between-points-and-nearest-polygon-in-r
 # see that to takecare of mainland
 

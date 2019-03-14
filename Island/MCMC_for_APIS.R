@@ -62,7 +62,8 @@ SufStat_d_ex = function(Z,theta,link_outer,distM_full,link_mainland,distM_mainla
 island = read.csv("CT_posi_only_island.csv")
 
 link_inner = as.matrix( read.csv("link_inner.csv",row.names = 1))
-link_outer = as.matrix( read.csv("link_outer.csv",row.names = 1))
+#link_outer = as.matrix( read.csv("link_outer.csv",row.names = 1))
+link_outer = as.matrix( read.csv("link_outer_full.csv",row.names = 1))
 link_mainland = as.matrix( read.csv("link_mainland.csv"))
 #link_outer = 0 * link_outer # this makes it a mainland-island system
 #link_mainland = matrix(1,155,1)
@@ -82,9 +83,9 @@ spp_mat = matrix(c(0,1,1,0),2,2)
 
 envX = matrix(1,155,1)
 theta = list(beta = c(0,0),
-             eta_in = c(.15,.15),
-             eta_ex = c(.3,.3),
-             d_ex = c(1,1),
+             eta_in = c(.5,.55),
+             eta_ex = c(.45,.4),
+             d_ex = c(1,.5),
              spp_mat = -.2 * spp_mat)
 
 A_in = getintralayerGraph(distM_full,link_inner,theta$eta_in,d,int_range = "nn",theta$spp_mat)
@@ -111,7 +112,7 @@ tempdata = data.frame(island[,6:7],
                       Z_1 = Ising_sample[num_sample_viewing,1:155],
                       Z_2 = Ising_sample[num_sample_viewing,156:310])
 
-ggplot(data = tempdata,aes(x=X,y=Y,color = Z_2))+
+ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
   geom_point()
 
 I_beta_1 = (rowSums(Ising_sample[,1:155]))
