@@ -83,10 +83,10 @@ spp_mat = matrix(c(0,1,1,0),2,2)
 
 envX = matrix(1,155,1)
 theta = list(beta = c(0,0),
-             eta_in = c(.5,.55),
-             eta_ex = c(.45,.4),
-             d_ex = c(1,.5),
-             spp_mat = -.2 * spp_mat)
+             eta_in = c(.2,.2),
+             eta_ex = c(.4,.4),
+             d_ex = c(.2,.2),
+             spp_mat = -0.15 * spp_mat)
 
 A_in = getintralayerGraph(distM_full,link_inner,theta$eta_in,d,int_range = "nn",theta$spp_mat)
 A_ex = getintralayerGraph(distM_full , link_outer,theta$eta_ex,theta$d_ex,int_range = "exp",theta$spp_mat)
@@ -104,15 +104,28 @@ require(IsingSampler)
 
 set.seed(42)
 Ising_sample = IsingSampler(n=500,G,thr,responses = c(-1,1),method="CFTP")
+Ising_sample_mean = (colMeans(Ising_sample)+1)/2
+uniqueisland = as.character( unique(island$Location))
+Z1_mean = apply(as.matrix(uniqueisland),1,function(uisland,Ising_mean,island){
+  return(mean(Ising_mean[as.character(island$Location)== as.character(uisland)]))
+}
+                ,Ising_sample_mean[1:155]
+                ,island)
+
+Z2_mean = apply(as.matrix(uniqueisland),1,function(uisland,Ising_mean,island){
+  return(mean(Ising_mean[as.character(island$Location)== as.character(uisland)]))
+}
+                ,Ising_sample_mean[1:155 + 155]
+                ,island)
 
 require(ggplot2)
 
 num_sample_viewing = 1
 tempdata = data.frame(island[,6:7],
-                      Z_1 = Ising_sample[num_sample_viewing,1:155],
-                      Z_2 = Ising_sample[num_sample_viewing,156:310])
+                      Z_1 = Ising_sample_mean[1:155],
+                      Z_2 = Ising_sample_mean[156:310])
 
-ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1))+
+ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1+Z_2))+
   geom_point()
 
 I_beta_1 = (rowSums(Ising_sample[,1:155]))
