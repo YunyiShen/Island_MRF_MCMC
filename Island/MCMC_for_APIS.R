@@ -83,7 +83,7 @@ spp_mat = matrix(c(0,1,1,0),2,2)
 
 envX = matrix(1,155,1)
 theta = list(beta = c(0,0),
-             eta_in = c(.2,.2),
+             eta_in = c(.15,.15),
              eta_ex = c(.4,.4),
              d_ex = c(.2,.2),
              spp_mat = -0.15 * spp_mat)
@@ -104,8 +104,9 @@ require(IsingSampler)
 
 set.seed(42)
 Ising_sample = IsingSampler(n=500,G,thr,responses = c(-1,1),method="CFTP")
-Ising_sample_mean = (colMeans(Ising_sample)+1)/2
+Ising_sample_mean = colMeans(((Ising_sample)+1)/2)
 uniqueisland = as.character( unique(island$Location))
+
 Z1_mean = apply(as.matrix(uniqueisland),1,function(uisland,Ising_mean,island){
   return(mean(Ising_mean[as.character(island$Location)== as.character(uisland)]))
 }
@@ -117,6 +118,20 @@ Z2_mean = apply(as.matrix(uniqueisland),1,function(uisland,Ising_mean,island){
 }
                 ,Ising_sample_mean[1:155 + 155]
                 ,island)
+
+island_size = apply(as.matrix(uniqueisland),1,function(uisland,island){
+  return(sum(as.character(island$Location)== as.character(uisland)))
+}
+,island)
+
+island_dist = apply(as.matrix(uniqueisland),1,function(uisland,island){
+  return(mean(distM_mainland[as.character(island$Location)== as.character(uisland)]))
+}
+,island)
+
+plot(island_dist,(Z1_mean+Z2_mean))
+plot(island_size,(Z1_mean+Z2_mean))
+
 
 require(ggplot2)
 
