@@ -66,7 +66,7 @@ link_inner = as.matrix( read.csv("link_inner.csv",row.names = 1))
 link_outer = as.matrix( read.csv("link_outer_full.csv",row.names = 1))
 link_mainland = as.matrix( read.csv("link_mainland.csv"))
 #link_outer = 0 * link_outer # this makes it a mainland-island system
-#link_mainland = matrix(1,155,1)
+#link_mainland = matrix(0,155,1)
 
 distM_full = as.matrix( read.csv("distM_full.csv",row.names = 1))
 distM_mainland = as.matrix( read.csv("dist_to_mainland.csv",row.names = 1))
@@ -82,11 +82,11 @@ distM_mainland = (distM_mainland-intcd)/normd
 spp_mat = matrix(c(0,1,1,0),2,2)
 
 envX = matrix(1,155,1)
-theta = list(beta = c(0,0),
+theta = list(beta = c(0,-.1),
              eta_in = c(.15,.15),
-             eta_ex = c(.4,.4),
+             eta_ex = c(.3,.3),
              d_ex = c(.2,.2),
-             spp_mat = -0.15 * spp_mat)
+             spp_mat = -0.1 * spp_mat)
 
 A_in = getintralayerGraph(distM_full,link_inner,theta$eta_in,d,int_range = "nn",theta$spp_mat)
 A_ex = getintralayerGraph(distM_full , link_outer,theta$eta_ex,theta$d_ex,int_range = "exp",theta$spp_mat)
@@ -105,6 +105,7 @@ require(IsingSampler)
 set.seed(42)
 Ising_sample = IsingSampler(n=500,G,thr,responses = c(-1,1),method="CFTP")
 Ising_sample_mean = colMeans(((Ising_sample)+1)/2)
+Innerproduct_mean = colMeans(Ising_sample[,1:155]*Ising_sample[,1:155+155])
 uniqueisland = as.character( unique(island$Location))
 
 Z1_mean = apply(as.matrix(uniqueisland),1,function(uisland,Ising_mean,island){
@@ -119,6 +120,13 @@ Z2_mean = apply(as.matrix(uniqueisland),1,function(uisland,Ising_mean,island){
                 ,Ising_sample_mean[1:155 + 155]
                 ,island)
 
+innerpord_mean = apply(as.matrix(uniqueisland),1,function(uisland,Ising_mean,island){
+  return(mean(Ising_mean[as.character(island$Location)== as.character(uisland)]))
+}
+,Innerproduct_mean
+,island)
+
+
 island_size = apply(as.matrix(uniqueisland),1,function(uisland,island){
   return(sum(as.character(island$Location)== as.character(uisland)))
 }
@@ -130,18 +138,36 @@ island_dist = apply(as.matrix(uniqueisland),1,function(uisland,island){
 ,island)
 
 plot(island_dist,(Z1_mean+Z2_mean))
+plot(island_dist,(innerpord_mean))
 plot(island_size,(Z1_mean+Z2_mean))
+plot(island_size,(innerpord_mean))
 
+lmdata = data.frame(innerpord_mean,island_dist,island_size)
+igo_innerprod = lm(log(innerpord_mean+1)~.,data = lmdata)
+
+lmdata_z1z2 = data.frame(Z1plusZ2 = Z1_mean+Z2_mean,island_dist,island_size)
+igo_richness = lm(log(Z1plusZ2)~.,data = lmdata_z1z2)
 
 require(ggplot2)
+require(RColorBrewer)
 
 num_sample_viewing = 1
 tempdata = data.frame(island[,6:7],
                       Z_1 = Ising_sample_mean[1:155],
-                      Z_2 = Ising_sample_mean[156:310])
+                      Z_2 = Ising_sample_mean[156:310],
+                      Innerproduct_mean)
 
-ggplot(data = tempdata,aes(x=X,y=Y,color = Z_1+Z_2))+
-  geom_point()
+
+myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))
+sc <- scale_colour_gradientn(colours = myPalette(100), limits=c(-0.25, 0.25))
+
+ggplot(data = tempdata,aes(x=X,y=Y,color = Innerproduct_mean))+
+  geom_point() + sc
+
+
+
+
+
 
 I_beta_1 = (rowSums(Ising_sample[,1:155]))
 I_beta_2 = (rowSums(Ising_sample[,1:155+155]))
