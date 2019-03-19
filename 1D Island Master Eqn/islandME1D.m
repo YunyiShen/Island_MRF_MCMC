@@ -1,12 +1,12 @@
-b = 8; % size of the 1d island
-N = 3; %maximum population size at certain site
+b = 7; % size of the 1d island
+N = 4; %maximum population size at certain site
 Q = sparse((N + 1)^b,(N + 1)^b); % Q matrix for the master eqn
-S = 5;
-C = 1;
-mu = 0.3;
+S = 3;
+C = .5;
+mu = 0.1;
 
 for i = 1:(N+1)^b  % fill Q, first loop over rows
-    i/((N+1)^b)
+   i/((N+1)^b)
    code = dec2base((i-1),(N+1),b); % what do we have in each site
    nx = str2double(code(1)); % x=0
    if(nx==0) % if nothing at dock site
@@ -33,13 +33,16 @@ for i = 1:(N+1)^b  % fill Q, first loop over rows
        end
    end
    for j = 2:(b-1) % loop over inner site,since we only have n_{x}+1 of n_{x}-1 to have non-zero transitioning
+       if(b==2) 
+           break
+       end
        nx = str2double(code(j)); % x=0
        if(nx==0) % if nothing at dock site
            temp = code;
            temp(j) = temp(j) + 1;
            temp = base2dec(temp,(N+1));
            Q(i,temp + 1) = (1-mu) * C*(nx/N)*(N-nx)/(N-1) + ...
-               (mu/2) * (1-nx/N) * (str2double(code(j-1))/N+str2double(code(j+1))/N)/2;
+               (mu/2) * (1-nx/N) * (str2double(code(j-1))/N+str2double(code(j+1))/N);
        else
            if (nx==N)
                temp = code;
@@ -52,7 +55,7 @@ for i = 1:(N+1)^b  % fill Q, first loop over rows
                temp(j) = temp(j) + 1;
                temp = base2dec(temp,(N+1));
                Q(i,temp + 1) = (1-mu) * C*(nx/N)*(N-nx)/(N-1) + ...
-                   (mu/2) * (1-nx/N) * (str2double(code(j-1))/N+str2double(code(j+1))/N)/2;
+                   (mu/2) * (1-nx/N) * (str2double(code(j-1))/N+str2double(code(j+1))/N);
                temp = code;
                temp(j) = temp(j) - 1; %  go -1
                temp = base2dec(temp,(N+1));
@@ -92,14 +95,16 @@ end
 
 Q = Q - diag(sum(Q));
 
-% [vec,val] = eig(full(Q));
-% stat = vec(:,(abs(diag(val))==min(abs(diag(val)))));
-% stat = stat/sum(stat);
-stat = Q\(zeros((N+1)^b,1));
+%[vec,val] = eig(full(Q));
+%stat = vec(:,(abs(diag(val))==min(abs(diag(val)))));
+[stat,val] = eigs(Q,1,'SM');
+stat = stat/sum(stat);
+%stat = Q\(zeros((N+1)^b,1));
 codes = dec2base(0:((N + 1)^b-1),N+1,b);
 margin_f = zeros(b,N+1); % calculate the marginal distribution of given site
 margin_H = zeros(b,1);
 
+mean_N = zeros(1,b);
 figure
 for i = 1:b
    for j = 0:N 
@@ -107,6 +112,8 @@ for i = 1:b
    end
    plot(0:N,margin_f(i,:));
    hold on
+   mean_N(i) = sum((0:N) .* margin_f(i,:));
 end
-
+figure
+plot(1:b,mean_N)
 
