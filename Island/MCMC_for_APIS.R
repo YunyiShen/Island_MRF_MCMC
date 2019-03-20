@@ -82,10 +82,10 @@ distM_mainland = (distM_mainland-intcd)/normd
 spp_mat = matrix(c(0,1,1,0),2,2)
 
 envX = matrix(1,155,1)
-theta = list(beta = c(0,-.1),
-             eta_in = c(.15,.15),
-             eta_ex = c(.3,.3),
-             d_ex = c(.2,.2),
+theta = list(beta = c(0,0),
+             eta_in = c(.2,.15),
+             eta_ex = c(.1,.2),
+             d_ex = c(0,0),
              spp_mat = -0.1 * spp_mat)
 
 A_in = getintralayerGraph(distM_full,link_inner,theta$eta_in,d,int_range = "nn",theta$spp_mat)
@@ -200,8 +200,9 @@ I_eta = apply(Ising_sample,1,function(Z){sum(Z[1:155]*Z[1:155+155])})
 FI_simu = data.frame(I_beta_1,I_beta_2,
                      I_eta_in_1,I_eta_in_2,
                      I_eta_ex_1,I_eta_ex_2,
-                     I_d_ex_1,I_d_ex_2,
+                     #I_d_ex_1,I_d_ex_2,
                      I_eta)
 
 FI = cov(FI_simu)
+eigen(FI)$value
 
