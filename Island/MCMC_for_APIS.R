@@ -83,10 +83,10 @@ spp_mat = matrix(c(0,1,1,0),2,2)
 
 envX = matrix(1,155,1)
 theta = list(beta = c(0,0),
-             eta_in = c(.2,.15),
-             eta_ex = c(.1,.2),
+             eta_in = c(.15,.15),
+             eta_ex = c(.15,.15),
              d_ex = c(0,0),
-             spp_mat = -0.1 * spp_mat)
+             spp_mat = -0.15 * spp_mat)
 
 A_in = getintralayerGraph(distM_full,link_inner,theta$eta_in,d,int_range = "nn",theta$spp_mat)
 A_ex = getintralayerGraph(distM_full , link_outer,theta$eta_ex,theta$d_ex,int_range = "exp",theta$spp_mat)
@@ -205,4 +205,4 @@ FI_simu = data.frame(I_beta_1,I_beta_2,
 
 FI = cov(FI_simu)
 eigen(FI)$value
-
+diag(FI)
