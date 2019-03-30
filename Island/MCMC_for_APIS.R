@@ -79,13 +79,14 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-spp_mat = matrix(c(0,1,1,0),2,2)
+spp_mat = matrix(1,3,3)
+diag(spp_mat) = 0
 
 envX = matrix(1,155,1)
-theta = list(beta = c(0,0),
-             eta_in = c(.15,.15),
-             eta_ex = c(.15,.15),
-             d_ex = c(0,0),
+theta = list(beta = c(0,0,0),
+             eta_in = c(.15,.15,.15),
+             eta_ex = c(.15,.15,.15),
+             d_ex = c(0,0,0),
              spp_mat = -0.15 * spp_mat)
 
 A_in = getintralayerGraph(distM_full,link_inner,theta$eta_in,d,int_range = "nn",theta$spp_mat)
@@ -171,9 +172,12 @@ ggplot(data = tempdata,aes(x=X,y=Y,color = Innerproduct_mean))+
 
 I_beta_1 = (rowSums(Ising_sample[,1:155]))
 I_beta_2 = (rowSums(Ising_sample[,1:155+155]))
+I_beta_3 = (rowSums(Ising_sample[,1:155+155 + 155]))
 
 I_eta_in_1 = (apply(Ising_sample[,1:155],1,function(Z,theta,A_in){0.5*(t(Z)%*%A_in[[1]]%*%(Z))/theta$eta_in[1]},theta,A_in))
 I_eta_in_2 = (apply(Ising_sample[,1:155+155],1,function(Z,theta,A_in){0.5*(t(Z)%*%A_in[[2]]%*%(Z))/theta$eta_in[2]},theta,A_in))
+I_eta_in_3 = (apply(Ising_sample[,1:155+2*155],1,function(Z,theta,A_in){0.5*(t(Z)%*%A_in[[3]]%*%(Z))/theta$eta_in[3]},theta,A_in))
+
 
 I_eta_ex_1 = (apply(Ising_sample[,1:155],1,
                     function(Z,theta,A_ex,link_mainland,distM_mainland){
@@ -187,6 +191,12 @@ I_eta_ex_2 = (apply(Ising_sample[,1:155+155],1,
                         sum(exp(-exp(theta$d_ex[2])*distM_mainland)*link_mainland*Z)
                     },theta,A_ex,link_mainland,distM_mainland))
 
+I_eta_ex_3 = (apply(Ising_sample[,1:155+2*155],1,
+                    function(Z,theta,A_ex,link_mainland,distM_mainland){
+                      0.5*(t(Z)%*%A_ex[[3]]%*%(Z))/theta$eta_ex[3] + 
+                        sum(exp(-exp(theta$d_ex[3])*distM_mainland)*link_mainland*Z)
+                    },theta,A_ex,link_mainland,distM_mainland))
+
 
 I_d_ex_1 = apply(Ising_sample[,1:155],1,
                  SufStat_d_ex,
@@ -195,13 +205,15 @@ I_d_ex_2 = apply(Ising_sample[,1:155+155],1,
                  SufStat_d_ex,
                  theta,link_outer,distM_full,link_mainland,distM_mainland,2)
 
-I_eta = apply(Ising_sample,1,function(Z){sum(Z[1:155]*Z[1:155+155])})
+I_eta1 = apply(Ising_sample,1,function(Z){sum(Z[1:155]*Z[1:155+155])})
+I_eta2 = apply(Ising_sample,1,function(Z){sum(Z[1:155]*Z[1:155+2*155])})
+I_eta3 = apply(Ising_sample,1,function(Z){sum(Z[1:155+2*155]*Z[1:155+155])})
 
-FI_simu = data.frame(I_beta_1,I_beta_2,
-                     I_eta_in_1,I_eta_in_2,
-                     I_eta_ex_1,I_eta_ex_2,
+FI_simu = data.frame(I_beta_1,I_beta_2,I_beta_3,
+                     I_eta_in_1,I_eta_in_2,I_eta_in_3,
+                     I_eta_ex_1,I_eta_ex_2,I_eta_ex_3,
                      #I_d_ex_1,I_d_ex_2,
-                     I_eta)
+                     I_eta1,I_eta2,I_eta3)
 
 FI = cov(FI_simu)
 eigen(FI)$value
