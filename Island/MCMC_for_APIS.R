@@ -83,7 +83,7 @@ spp_mat = matrix(1,3,3)
 diag(spp_mat) = 0
 
 envX = matrix(1,155,1)
-theta = list(beta = c(0,0,0),
+theta = list(beta = c(0.3,0.3,0.3),
              eta_in = c(.15,.15,.15),
              eta_ex = c(.15,.15,.15),
              d_ex = c(0,0,0),
