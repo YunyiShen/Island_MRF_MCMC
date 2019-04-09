@@ -79,15 +79,16 @@ normd = max(max(distM_mainland*link_mainland),max(link_outer*distM_full))-intcd
 distM_full = (distM_full-intcd)/normd # normalizing the distance
 distM_mainland = (distM_mainland-intcd)/normd
 
-spp_mat = matrix(1,3,3)
+spp_mat = matrix(c(0,-.2,-.2,-.2,0,-.0,-.2,-.0,0),3,3)
 diag(spp_mat) = 0
 
 envX = matrix(1,155,1)
+
 theta = list(beta = c(0.3,0.3,0.3),
              eta_in = c(.15,.15,.15),
-             eta_ex = c(.15,.15,.15),
+             eta_ex = c(.25,.15,.15),
              d_ex = c(0,0,0),
-             spp_mat = -0.15 * spp_mat)
+             spp_mat =  spp_mat)
 
 A_in = getintralayerGraph(distM_full,link_inner,theta$eta_in,d,int_range = "nn",theta$spp_mat)
 A_ex = getintralayerGraph(distM_full , link_outer,theta$eta_ex,theta$d_ex,int_range = "exp",theta$spp_mat)
@@ -160,9 +161,9 @@ tempdata = data.frame(island[,6:7],
 
 
 myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))
-sc <- scale_colour_gradientn(colours = myPalette(100), limits=c(-0.25, 0.25))
+sc <- scale_colour_gradientn(colours = myPalette(100), limits=c(0.4, 0.75))
 
-ggplot(data = tempdata,aes(x=X,y=Y,color = Innerproduct_mean))+
+ggplot(data = tempdata,aes(x=X,y=Y,color = Z_2))+
   geom_point() + sc
 
 
@@ -218,3 +219,4 @@ FI_simu = data.frame(I_beta_1,I_beta_2,I_beta_3,
 FI = cov(FI_simu)
 eigen(FI)$value
 diag(FI)
+
